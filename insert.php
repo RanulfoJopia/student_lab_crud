@@ -6,16 +6,21 @@ if (isset($_POST['submit'])) {
     $email  = $_POST['email'];
     $course = $_POST['course'];
 
-    $sql = "INSERT INTO students (name, email, course)
-            VALUES ('$name','$email','$course')";
+    // Use prepared statement to prevent SQL injection
+    $stmt = $conn->prepare("INSERT INTO students (name, email, course) VALUES (?, ?, ?)");
+    $stmt->bind_param("sss", $name, $email, $course);
 
-    if ($conn->query($sql) === TRUE) {
+    if ($stmt->execute()) {
         header("Location: select.php");
+        exit();
     } else {
-        echo "Error: " . $sql . "<br>" . $conn->error;
+        echo "Error: " . $stmt->error;
     }
+
+    $stmt->close();
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">

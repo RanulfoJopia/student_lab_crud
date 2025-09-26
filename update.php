@@ -1,18 +1,36 @@
 <?php
 include 'db_connect.php';
-$id = $_GET['id'];
-$result = $conn->query("SELECT * FROM students WHERE id=$id");
-$row = $result->fetch_assoc();
 
+$id = $_GET['id'];
+
+// Fetch existing student securely
+$stmt = $conn->prepare("SELECT * FROM students WHERE id = ?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$result = $stmt->get_result();
+$row = $result->fetch_assoc();
+$stmt->close();
+
+// Handle form submission securely
 if (isset($_POST['update'])) {
     $name   = $_POST['name'];
     $email  = $_POST['email'];
     $course = $_POST['course'];
 
-    $conn->query("UPDATE students SET name='$name', email='$email', course='$course' WHERE id=$id");
-    header("Location: select.php");
+    $stmt = $conn->prepare("UPDATE students SET name=?, email=?, course=? WHERE id=?");
+    $stmt->bind_param("sssi", $name, $email, $course, $id);
+
+    if ($stmt->execute()) {
+        header("Location: select.php");
+        exit();
+    } else {
+        echo "Error: " . $stmt->error;
+    }
+
+    $stmt->close();
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
